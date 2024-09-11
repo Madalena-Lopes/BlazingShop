@@ -1,0 +1,89 @@
+﻿@page "/products/create"
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext Context
+@inject NavigationManager NavManager
+
+<h1>Novo Produto</h1>
+
+@* EditForm tag helper do blazor q traz uma optima funcionalidade para a escrita do conteúdo html/css/js *@
+<EditForm Model="@_model" OnValidSubmit="@HandleSubmitAsync">
+    @*No submit dos meus dados vai ser chamada a função OnValidSubmit (passagem só da referência à função - callback)
+        Só vai ser submetido qd o meu formulário for válido! *@
+
+    <DataAnnotationsValidator/> @* para trazer os erros do data annotations *@
+    <ValidationSummary/> @* sumário de todos os erros *@
+
+    <div class="mb-3">
+        <label for="Title" class="form-label">Title</label>
+        <InputText class="form-control" 
+                   type="text" 
+                   id="Title" 
+                   @bind-Value="_model.Title" />
+    </div>
+    
+    <div class="mb-3">
+        <label for="Price" class="form-label">Price</label>
+        <InputNumber class="form-control" 
+                     type="number" 
+                     id="Price" 
+                     @bind-Value="_model.Price" />
+    </div>
+    
+    <div class="mb-3">
+        <label for="CategoryId" class="form-label">Category</label>
+        <InputSelect id="CategoryId" 
+                     @bind-Value="_model.CategoryId" 
+                     class="form-control">
+            @foreach (var category in _categories)
+            {
+                <option value="@category.Id">
+                    @category.Title
+                </option>
+            }
+        </InputSelect>
+    </div>
+    
+    @if (!string.IsNullOrEmpty((_errorMessage)))
+    {
+        <div class="alert alert-danger" role="alert">
+            @_errorMessage
+        </div>
+    }
+
+    <button class="btn btn-success" type="submit">
+        SAVE
+    </button>
+
+</EditForm>
+
+@code {
+
+    Product _model = new(); //por defeito é private qd não se coloca nada
+    private List<Category> _categories = new();
+    private string? _errorMessage = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _categories = await Context
+            .Categories
+            .AsNoTracking()
+            .ToListAsync();
+        _model.CategoryId = _categories[0].Id; //para selecionar a 1ª categoria e não dar erro de q não está nenhuma selecionada
+    }
+
+
+    private async Task HandleSubmitAsync()
+    {
+        try
+        {
+            await Context.Products.AddAsync(_model);
+            await Context.SaveChangesAsync();
+            NavManager.NavigateTo("/products"); //para navegar para outra página
+        }
+        catch 
+        {
+            _errorMessage = "Falha ao submeter os dados";
+        }
+    }
+
+}

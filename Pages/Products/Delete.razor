@@ -1,0 +1,60 @@
+﻿@page "/products/delete/{id:int}"
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext Context
+@inject NavigationManager NavManager
+
+<h1>Delete @_model?.Title?</h1>
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @_errorMessage
+    </div>
+}
+
+<EditForm Model="@_model" OnValidSubmit="@HandleSubmit">
+    <div class="mb-3">
+        <label for="Title" class="form-label">Title</label>
+        <InputText readonly class="form-control" type="text" id="Title" @bind-Value="_model.Title" />
+    </div>
+
+    <div class="mb-3">
+        <label for="Price" class="form-label">Price</label>
+        <InputNumber readonly class="form-control" type="number" id="Price" @bind-Value="_model.Price" />
+    </div>
+    <button class="btn btn-danger" type="submit">DELETE</button>
+</EditForm>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private Product? _model = new();
+    private string? _errorMessage = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await Context.Products.AsNoTracking().FirstOrDefaultAsync(x => x.Id == Id);
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            var prod = await Context.Products.FirstOrDefaultAsync(x => x.Id == Id);
+            if (prod is null)
+                throw new Exception("Produto não encontrado");
+
+            Context.Products.Remove(prod);
+            await Context.SaveChangesAsync();
+
+            NavManager.NavigateTo("/products");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+    }
+
+}

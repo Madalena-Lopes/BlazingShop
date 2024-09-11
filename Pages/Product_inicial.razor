@@ -1,0 +1,15 @@
+﻿@* @page "/products/{skip:int?}/{take:int?}"
+
+
+<PageTitle>Products</PageTitle>
+
+<h1>Products</h1>
+<ProductListComponent Skip="@Skip" Take="@Take"></ProductListComponent>
+
+@code {
+    [Parameter] 
+    public int Skip { get; set; } = 0;
+
+    [Parameter] 
+    public int Take { get; set; } = 25;
+} *@
